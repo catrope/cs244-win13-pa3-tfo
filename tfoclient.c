@@ -110,20 +110,19 @@ int main(int argc, char *argv[])
             perror("connect");
             return 1;
         }
-        n = write(sockfd, query, querySize);
-        if (n < 0) {
-            perror("write");
-            return 1;
-        }
-    }
-
-    do {
         n = read(sockfd, readbuff, sizeof(readbuff));
         if (n < 0) {
             perror("read");
             return 1;
         }
         write(1, readbuff, n);
-    } while (n > 0);
+
+        n = write(sockfd, query, querySize);
+        if (n < 0) {
+            perror("write");
+            return 1;
+        }
+    }
+    close(sockfd);
     return 0;
 }

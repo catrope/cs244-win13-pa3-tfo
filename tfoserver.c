@@ -103,13 +103,6 @@ int main(int argc, char *argv[])
             write(1, readBuff, num);
         } while (num > 0);
 
-        ticks = time(NULL);
-        snprintf(sendBuff, sizeof(sendBuff), "The current time is %.24s. Goodbye.\r\n", ctime(&ticks));
-        if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
-            perror("write");
-            return 1;
-        }
-
         close(connfd);
     }
     close(listenfd);
