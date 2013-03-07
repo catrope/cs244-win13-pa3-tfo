@@ -24,15 +24,18 @@ int main(int argc, char *argv[])
     int sockfd, n, port = 0, useTFO = 0;
     char readbuff[1000];
     struct sockaddr_in serv_addr;
-    char str[] = "hello world";
+    char *query = NULL;
+    int querySize, bytesRead;
     int opt, longindex, serverSet = 0;
     struct option options[] = {
         {"server", 1, NULL, 's'},
         {"port", 1, NULL, 'p'},
-        {"tfo", 0, NULL, 'f'}
+        {"tfo", 0, NULL, 'f'},
+        {"query", 1, NULL, 'q'}
     };
+    FILE *f = NULL;
 
-    while ((opt = getopt_long(argc, argv, "s:p:f", options, &longindex)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:p:fq:", options, &longindex)) != -1) {
         switch(opt) {
             case 's':
                 memset(&serv_addr, 0, sizeof(serv_addr));
@@ -55,15 +58,39 @@ int main(int argc, char *argv[])
             case 'f':
                 useTFO = 1;
                 break;
+            case 'q':
+                f = fopen(optarg, "rb");
+                if (!f) {
+                    perror("fopen");
+                    printf("Failed to open query file `%s'\n", optarg);
+                }
+                query = malloc(1000);
+                querySize = 0;
+                while(!feof(f)) {
+                    bytesRead = fread(readbuff, 1, 1000, f);
+                    if (bytesRead < 0) {
+                        perror("fread");
+                        return 1;
+                    }
+                    memcpy(&query[querySize], readbuff, bytesRead);
+                    querySize += bytesRead;
+                    query = realloc(query, querySize + 1000);
+                }
+                break;
         }
     }
 
     if (!serverSet || port == 0) {
-        printf("Usage: %s -s <server IP> -p <server port> [-f]\n\n", argv[0]);
+        printf("Usage: %s -s <server IP> -p <server port> [-f] [-q <query file>]\n\n", argv[0]);
         printf("\t-s IP | --server=IP\tThe IP address of the server\n");
         printf("\t-p port | --port=port\tThe port the server is listening on\n");
         printf("\t-f | --tfo\t\tEnable TFO (disabled by default)\n");
+        printf("\t-q | --query\t\tFile with query to send. If omitted, hello world will be sent\n");
         return 1;
+    }
+    if (!query) {
+        query = "Hello world!";
+        querySize = strlen(query);
     }
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -74,7 +101,7 @@ int main(int argc, char *argv[])
     }
 
     if (useTFO) {
-        if (sendto(sockfd, str, strlen(str), MSG_FASTOPEN, (struct sockaddr*)&serv_addr, sizeof(struct sockaddr_in)) < 0) {
+        if (sendto(sockfd, query, querySize, MSG_FASTOPEN, (struct sockaddr*)&serv_addr, sizeof(struct sockaddr_in)) < 0) {
             perror("sendto");
             return 1;
         }
@@ -83,7 +110,7 @@ int main(int argc, char *argv[])
             perror("connect");
             return 1;
         }
-        n = write(sockfd, str, strlen(str));
+        n = write(sockfd, query, querySize);
         if (n < 0) {
             perror("write");
             return 1;
