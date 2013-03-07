@@ -117,12 +117,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    n = read(sockfd, readbuff, sizeof(readbuff)-1);
-    if (n < 0) {
-        perror("read");
-        return 1;
-    }
-    readbuff[n] = 0;
-    printf("%s\n", readbuff);
+    do {
+        n = read(sockfd, readbuff, sizeof(readbuff));
+        if (n < 0) {
+            perror("read");
+            return 1;
+        }
+        write(1, readbuff, n);
+    } while (n > 0);
     return 0;
 }
