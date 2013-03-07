@@ -82,27 +82,29 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
-    if (connfd < 0) {
-        perror("accept");
-        return 1;
-    }
-    num = read(connfd, readBuff, sizeof(readBuff)-1);
-    if (num < 0) {
-        perror("read");
-        return 1;
-    }
-    readBuff[num] = 0;
-    printf("%s\n", readBuff);
+    while (1) {
+        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+        if (connfd < 0) {
+            perror("accept");
+            return 1;
+        }
+        num = read(connfd, readBuff, sizeof(readBuff)-1);
+        if (num < 0) {
+            perror("read");
+            return 1;
+        }
+        readBuff[num] = 0;
+        printf("%s\n", readBuff);
 
-    ticks = time(NULL);
-    snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-    if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
-        perror("write");
-        return 1;
-    }
+        ticks = time(NULL);
+        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
+        if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
+            perror("write");
+            return 1;
+        }
 
-    close(connfd);
+        close(connfd);
+    }
     close(listenfd);
     return 0;
 }
