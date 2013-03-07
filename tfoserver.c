@@ -1,20 +1,11 @@
-/* 
- * A generic protection in case you include this 
- * from multiple files 
- */
-#ifndef _KERNEL_FASTOPEN
-#define _KERNEL_FASTOPEN
- 
 /* conditional define for TCP_FASTOPEN */
 #ifndef TCP_FASTOPEN
 #define TCP_FASTOPEN   23
 #endif
- 
+
 /* conditional define for MSG_FASTOPEN */
 #ifndef MSG_FASTOPEN
 #define MSG_FASTOPEN   0x20000000
-#endif
- 
 #endif
 
 #include <sys/socket.h>
@@ -26,42 +17,71 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-#include <time.h> 
+#include <time.h>
 #include <netinet/tcp.h>
 int main(int argc, char *argv[])
 {
-    int listenfd = 0, connfd = 0;
-    struct sockaddr_in serv_addr; 
-
+    int listenfd, connfd, qlen = 5, port, num;
+    struct sockaddr_in serv_addr;
     char sendBuff[1025];
-    time_t ticks; 
+    char readBuff[6000];
+    time_t ticks;
+
+    if (argc < 2) {
+        printf("Usage: %s <port>\n", argv[0]);
+        return 1;
+    }
+    port = atoi(argv[1]);
+    if (port <= 0) {
+        printf("Invalid port number `%s'\n", argv[1]);
+        return 1;
+    }
 
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    memset(sendBuff, '0', sizeof(sendBuff)); 
+    if (listenfd < 0) {
+        perror("socket");
+        return 1;
+    }
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    memset(sendBuff, 0, sizeof(sendBuff));
 
-    int qlen = 5;
     setsockopt(listenfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(12345); 
+    serv_addr.sin_port = htons(port);
 
-    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+    if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("bind");
+        return 1;
+    }
 
-    listen(listenfd, 10); 
+    if (listen(listenfd, 10) < 0) {
+        perror("listen");
+        return 1;
+    }
 
-    connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-    char buff[6000];
-    int num = read(connfd, buff, sizeof(buff)-1);
-
-    buff[num] = 0;
-    printf("%s\n", buff);
+    connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+    if (connfd < 0) {
+        perror("accept");
+        return 1;
+    }
+    num = read(connfd, readBuff, sizeof(readBuff)-1);
+    if (num < 0) {
+        perror("read");
+        return 1;
+    }
+    readBuff[num] = 0;
+    printf("%s\n", readBuff);
 
     ticks = time(NULL);
     snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-    write(connfd, sendBuff, strlen(sendBuff)); 
+    if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
+        perror("write");
+        return 1;
+    }
 
     close(connfd);
     close(listenfd);
+    return 0;
 }
