@@ -88,16 +88,23 @@ int main(int argc, char *argv[])
             perror("accept");
             return 1;
         }
-        num = read(connfd, readBuff, sizeof(readBuff)-1);
-        if (num < 0) {
-            perror("read");
+        ticks = time(NULL);
+        snprintf(sendBuff, sizeof(sendBuff), "Hi there, the current time is %.24s\r\n", ctime(&ticks));
+        if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
+            perror("write");
             return 1;
         }
-        readBuff[num] = 0;
-        printf("%s\n", readBuff);
+        do {
+            num = read(connfd, readBuff, sizeof(readBuff));
+            if (num < 0) {
+                perror("read");
+                return 1;
+            }
+            write(1, readBuff, num);
+        } while (num > 0);
 
         ticks = time(NULL);
-        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
+        snprintf(sendBuff, sizeof(sendBuff), "The current time is %.24s. Goodbye.\r\n", ctime(&ticks));
         if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
             perror("write");
             return 1;
