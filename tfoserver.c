@@ -19,21 +19,40 @@
 #include <sys/types.h>
 #include <time.h>
 #include <netinet/tcp.h>
+#include <getopt.h>
+
 int main(int argc, char *argv[])
 {
-    int listenfd, connfd, qlen = 5, port, num;
+    int listenfd, connfd, qlen = 5, num, port = 0, useTFO;
     struct sockaddr_in serv_addr;
     char sendBuff[1025];
     char readBuff[6000];
     time_t ticks;
+    struct option options[] = {
+        {"port", 1, NULL, 'p'},
+        {"tfo", 0, NULL, 'f'}
+    };
+    int opt, longindex;
 
-    if (argc < 2) {
-        printf("Usage: %s <port>\n", argv[0]);
-        return 1;
+    while ((opt = getopt_long(argc, argv, "s:p:f", options, &longindex)) != -1) {
+        switch(opt) {
+            case 'p':
+                port = atoi(optarg);
+                if (port <= 0) {
+                    printf("Invalid port `%s'\n", optarg);
+                    return 1;
+                }
+                break;
+            case 'f':
+                useTFO = 1;
+                break;
+        }
     }
-    port = atoi(argv[1]);
-    if (port <= 0) {
-        printf("Invalid port number `%s'\n", argv[1]);
+
+    if (port == 0) {
+        printf("Usage: %s -p <port> [-f]\n", argv[0]);
+        printf("\t-p port | --port=port\tThe port the server is listening on\n");
+        printf("\t-f | --tfo\t\tEnable TFO (disabled by default)\n");
         return 1;
     }
 
@@ -45,7 +64,9 @@ int main(int argc, char *argv[])
     memset(&serv_addr, 0, sizeof(serv_addr));
     memset(sendBuff, 0, sizeof(sendBuff));
 
-    setsockopt(listenfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
+    if (useTFO) {
+        setsockopt(listenfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
+    }
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
