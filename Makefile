@@ -1,4 +1,4 @@
-ALL: tfoclient tfoserver tfomulticlient
+ALL: tfoclient tfoserver tfomulticlient tfomultiserver
 
 clean:
 	rm -f tfoclient tfoserver
@@ -11,3 +11,6 @@ tfoserver: tfoserver.c
 
 tfomulticlient: tfomulticlient.c
 	gcc -g -Wall tfomulticlient.c -o tfomulticlient
+
+tfomultiserver: tfomultiserver.c
+	gcc -g -Wall tfomultiserver.c -o tfomultiserver
