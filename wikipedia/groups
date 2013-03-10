@@ -1,0 +1,12 @@
+0: Stanford_University.0
+
+1: loadphp1.0 loadphp-site.0 loadphp-startup.0 geoiplookup.0 (once N bytes of 0 received)
+
+2: loadphp-site.2 Stanford_University.2 loadphp-startup.2 (once 0 done)
+
+3: loadphp1.2 (once 1 done)
+
+4: loadphp1.4 footercleanup.0 (once 3 done)
+
+5: everything else (once 4 done)
+
