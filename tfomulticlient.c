@@ -12,6 +12,8 @@
 #define _GNU_SOURCE
 #endif
 
+#define HEAD_THRESHOLD 4096
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -33,7 +35,7 @@ struct request {
     int waitForHead;
     int waitForCompletion;
     int responseLength;
-    char headBytes[7];
+    int headLength;
 };
 
 struct request *reqs = NULL;
@@ -58,7 +60,6 @@ void readReqsFromFile(FILE *f) {
         fscanf(f, "%s %d %d %d %d%d\n", filename, &reqs[i].group, &reqs[i].connection,
             &reqs[i].waitForHead, &reqs[i].waitForCompletion, &reqs[i].responseLength);
         reqs[i].fd = open(filename, 0);
-        memset(reqs[i].headBytes, '-', 7);
         if (reqs[i].fd < 0) {
             perror("open");
             exit(1);
@@ -147,28 +148,14 @@ void sendRequest(int i) {
 void handleResponse(int i) {
     int j, r;
     char buf[8193];
-    char possibleHead[15];
     j = reqForConn[i];
     r = read(connections[i], buf, sizeof(buf) - 1);
     buf[r] = 0;
-    memcpy(possibleHead, reqs[j].headBytes, 7);
-    if (r >= 7) {
-        memcpy(&possibleHead[7], buf, 7);
-        possibleHead[14] = 0;
-    } else {
-        memcpy(&possibleHead[7], buf, r);
-        possibleHead[7+r] = 0;
-    }
-    if (strcasestr(possibleHead, "</head>") || strcasestr(buf, "</head>")) {
+    reqs[j].responseLength -= r;
+    reqs[j].headLength -= r;
+    if (reqs[j].headLength <= 0) {
         groupsHead[reqs[j].group]--;
     }
-    if (r >= 7) {
-        memcpy(reqs[j].headBytes, &buf[r - 7], 7);
-    } else {
-        memcpy(&reqs[j].headBytes[7-r], buf, r);
-        memset(reqs[j].headBytes, '-', 7 - r);
-    }
-    reqs[j].responseLength -= r;
     if (reqs[j].responseLength <= 0) {
         groups[reqs[j].group]--;
         reqForConn[i] = -1;
