@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     int nfds = 0;
     struct conn *conns = NULL, *newConn, *c, *prevC, *nextC;
 
-    while ((opt = getopt_long(argc, argv, "s:p:f", options, &longindex)) != -1) {
+    while ((opt = getopt_long(argc, argv, "p:f", options, &longindex)) != -1) {
         switch(opt) {
             case 'p':
                 port = atoi(optarg);
