@@ -21,6 +21,11 @@
 #include <netinet/tcp.h>
 #include <getopt.h>
 
+struct conn {
+    int fd;
+    struct conn *next;
+};
+
 int main(int argc, char *argv[])
 {
     int listenfd, connfd, qlen = 5, num, port = 0, useTFO;
@@ -33,6 +38,9 @@ int main(int argc, char *argv[])
         {"tfo", 0, NULL, 'f'}
     };
     int opt, longindex;
+    fd_set selecting;
+    int nfds = 0;
+    struct conn *conns = NULL, *newConn, *c, *prevC, *nextC;
 
     while ((opt = getopt_long(argc, argv, "s:p:f", options, &longindex)) != -1) {
         switch(opt) {
@@ -83,28 +91,69 @@ int main(int argc, char *argv[])
     }
 
     while (1) {
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
-        if (connfd < 0) {
-            perror("accept");
+        FD_ZERO(&selecting);
+        FD_SET(listenfd, &selecting);
+        nfds = listenfd;
+        for (c = conns; c; c = c->next) {
+            FD_SET(c->fd, &selecting);
+            nfds = c->fd > nfds ? c->fd : nfds;
+        }
+        nfds++;
+        if (select(nfds, &selecting, NULL, NULL, NULL) < 0) {
+            perror("select");
             return 1;
         }
-        ticks = time(NULL);
-        snprintf(sendBuff, sizeof(sendBuff), "Hi there, the current time is %.24s\r\n", ctime(&ticks));
-        if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
-            perror("write");
-            return 1;
-        }
-        do {
-            num = read(connfd, readBuff, sizeof(readBuff));
-            if (num < 0) {
-                perror("read");
+
+        if (FD_ISSET(listenfd, &selecting)) {
+            connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+            if (connfd < 0) {
+                perror("accept");
                 return 1;
             }
-            write(1, readBuff, num);
-        } while (num > 0);
-
-        close(connfd);
+            newConn = malloc(sizeof(struct conn));
+            newConn->fd = connfd;
+            newConn->next = conns;
+            conns = newConn;
+            ticks = time(NULL);
+            snprintf(sendBuff, sizeof(sendBuff), "Hi there, the </head> time is %.24s\r\n", ctime(&ticks));
+            if (write(connfd, sendBuff, strlen(sendBuff)) < 0) {
+                perror("write");
+                return 1;
+            }
+        }
+        c = conns;
+        prevC = NULL;
+        while (c) {
+            nextC = c->next;
+            if (FD_ISSET(c->fd, &selecting)) {
+                num = read(c->fd, readBuff, sizeof(readBuff));
+                if ((num < 0 && errno == ECONNRESET) || num == 0) {
+                    /* Close and remove */
+                    close(c->fd);
+                    if (prevC) {
+                        prevC->next = nextC;
+                    } else {
+                        conns = nextC;
+                    }
+                    c = prevC;
+                    continue;
+                } else if (num < 0) {
+                    perror("read");
+                    return 1;
+                }
+                if (num > 0) {
+                    ticks = time(NULL);
+                    snprintf(sendBuff, sizeof(sendBuff), "Hi there, the </head> time is %.24s\r\n", ctime(&ticks));
+                    if (write(c->fd, sendBuff, strlen(sendBuff)) < 0) {
+                        perror("write");
+                        return 1;
+                   }
+                }
+                /* TODO send a proper response back */
+            }
+            prevC = c;
+            c = nextC;
+        }
     }
-    close(listenfd);
     return 0;
 }
