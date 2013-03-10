@@ -246,7 +246,8 @@ int main(int argc, char *argv[])
                 f = fopen(optarg, "rb");
                 if (!f) {
                     perror("fopen");
-                    printf("Failed to open query file `%s'\n", optarg);
+                    printf("Failed to open requests file `%s'\n", optarg);
+                    return 1;
                 }
                 readReqsFromFile(f);
                 fclose(f);
@@ -256,10 +257,10 @@ int main(int argc, char *argv[])
 
     if (!serverSet || port == 0 || !reqs) {
         printf("Usage: %s -s <server IP> -p <server port> -r <requests file> [-f]\n\n", argv[0]);
-        printf("\t-s IP | --server=IP\tThe IP address of the server\n");
-        printf("\t-p port | --port=port\tThe port the server is listening on\n");
-        printf("\t-f | --tfo\t\tEnable TFO (disabled by default)\n");
-        printf("\t-r | --requests\t\tFile specifying requests\n");
+        printf("\t-s IP | --server=IP\t\t\tThe IP address of the server\n");
+        printf("\t-p port | --port=port\t\t\tThe port the server is listening on\n");
+        printf("\t-f | --tfo\t\t\t\tEnable TFO (disabled by default)\n");
+        printf("\t-r filename | --requests=filename\tFile specifying requests\n");
         return 1;
     }
 
