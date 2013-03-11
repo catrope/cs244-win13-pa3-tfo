@@ -2,6 +2,7 @@
 
 PORT=12345
 
-echo Starting server on port $PORT
-./tfomultiserver -p 12345 -f
+echo Starting server for Wikipedia experiment on port $PORT
+cd wikipedia
+./tfomultiserver -p 12345 -f -r wikipedia/resp
 
