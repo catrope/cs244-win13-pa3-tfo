@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 struct request {
     int fd;
@@ -197,6 +198,7 @@ int main(int argc, char *argv[])
 {
     int port = 0, opt, longindex, serverSet = 0, i, nextReq;
     fd_set fds;
+    struct timeval start, end;
     struct option options[] = {
         {"server", 1, NULL, 's'},
         {"port", 1, NULL, 'p'},
@@ -251,6 +253,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    gettimeofday(&start, NULL);
     while (!allDone()) {
         nextReq = getReadyRequest();
         if (nextReq >= 0) {
@@ -272,10 +275,14 @@ int main(int argc, char *argv[])
             }
         }
     }
+    gettimeofday(&end, NULL);
     for (i = 0; i < numConns; i++) {
         if (connections[i] >= 0) {
             close(connections[i]);
         }
     }
+
+    printf("%ld\n", 1000000*(end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec);
+
     return 0;
 }
