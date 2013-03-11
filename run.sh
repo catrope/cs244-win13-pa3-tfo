@@ -8,6 +8,10 @@ PORT=12345
 # Enable TFO
 echo 3 | sudo tee /proc/sys/net/ipv4/tcp_fastopen
 
+# Determine RTT to the server
+echo Measuring RTT to the server...
+ping -c 10 $SERVERIP
+
 # Load Wikipedia 10 times without TFO
 cd wikipedia
 for i in {1..10}
