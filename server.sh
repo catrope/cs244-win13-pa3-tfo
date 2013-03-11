@@ -2,6 +2,9 @@
 
 PORT=12345
 
+# Enable TFO
+echo 3 | sudo tee /proc/sys/net/ipv4/tcp_fastopen
+
 echo Building...
 make
 
