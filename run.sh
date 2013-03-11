@@ -12,6 +12,9 @@ echo 3 | sudo tee /proc/sys/net/ipv4/tcp_fastopen
 echo Measuring RTT to the server...
 ping -c 10 $SERVERIP
 
+echo Building...
+make
+
 # Load Wikipedia 10 times without TFO
 cd wikipedia
 for i in {1..10}
