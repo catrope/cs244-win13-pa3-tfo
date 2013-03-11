@@ -17,19 +17,28 @@ make
 
 # Load Wikipedia 10 times without TFO
 cd wikipedia
+SUM=0
 for i in {1..10}
 do
-	echo -n "Wikipedia without TFO run $i "
-	$(which time) -f '%e' ../tfomulticlient -s $SERVERIP -p $PORT -r reqs
+	echo -n "Wikipedia without TFO run $i: "
+	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs)
+	echo $T us
+	SUM=$(($SUM + $T))
 done
+echo Total: $SUM us
+echo
 
 # Load Wikipedia once with TFO so we have a cookie for sure
 ../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f
 
 # Load Wikipedia 10 times with TFO
+SUM=0
 for i in {1..10}
 do
-	echo -n "Wikipedia with TFO run $i "
-	$(which time) -f '%e' ../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f
+	echo -n "Wikipedia with TFO run $i: "
+	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f)
+	echo $T us
+	SUM=$(($SUM + $T))
 done
+echo Total: $SUM us
 
