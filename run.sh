@@ -19,7 +19,7 @@ make
 # Load Wikipedia 10 times without TFO
 cd wikipedia
 SUM=0
-for i in {1..$SAMPLES}
+for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
 do
 	echo -n "Wikipedia without TFO run $i: "
 	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs)
@@ -34,7 +34,7 @@ echo
 
 # Load Wikipedia 10 times with TFO
 SUM=0
-for i in {1..$SAMPLES}
+for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
 do
 	echo -n "Wikipedia with TFO run $i: "
 	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f)
