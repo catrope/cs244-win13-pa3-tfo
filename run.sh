@@ -45,6 +45,7 @@ do
 	done
 	echo Average: $(($SUM / $SAMPLES)) us
 	PORT=$(($PORT + 1))
+	cd ..
 done
 
 
