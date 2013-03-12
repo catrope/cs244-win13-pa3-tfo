@@ -15,3 +15,4 @@ do
 	PORT=$(($PORT + 1))
 done
 
+wait
