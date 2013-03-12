@@ -1,11 +1,11 @@
 INSTRUCTIONS USING AMIs
 The simplest way to reproduce our setup is by launching our AMIs. Launch each of the following AMIs in the specified location with the specified AKI ("Kernel ID" or "Kernel image") and the default security group:
 
-location					AMI			AKI
+location			AMI			AKI
 us-west-1 (N. California)				aki-f77e26b2
-us-west-2 (Oregon)						aki-fc37bacc
+us-west-2 (Oregon)					aki-fc37bacc
 us-east-1 (N. Virginia)					aki-88aa75e1
-eu-west-1 (Ireland)						aki-71665e05
+eu-west-1 (Ireland)					aki-71665e05
 
 NOTE: You MUST use the specified AKI and you MUST use the default security group, otherwise the custom kernel won't boot or the right ports won't be open.
 
