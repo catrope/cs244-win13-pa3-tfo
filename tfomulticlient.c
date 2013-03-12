@@ -255,10 +255,12 @@ int main(int argc, char *argv[])
 
     gettimeofday(&start, NULL);
     while (!allDone()) {
-        nextReq = getReadyRequest();
-        if (nextReq >= 0) {
-            sendRequest(nextReq);
-        }
+	do {
+	        nextReq = getReadyRequest();
+	        if (nextReq >= 0) {
+	            sendRequest(nextReq);
+	        }
+	} while (nextReq >= 0);
         FD_ZERO(&fds);
         for (i = 0; i < numConns; i++) {
             if (FD_ISSET(connections[i], &openConns)) {
