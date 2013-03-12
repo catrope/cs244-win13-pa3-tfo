@@ -1,0 +1,11 @@
+GET /iu3?d=amazon.com&slot=navFooter&a2=01017d700f7248c2af1c5fa40e7efdf11fc8849dec7ad428a81bbc00b1d50e1a41c8&old_oo=0&cb=1363057649869 HTTP/1.1
+Host: s.amazon-adsystem.com
+Connection: keep-alive
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.17 (KHTML, like Gecko) Ubuntu Chromium/24.0.1312.56 Chrome/24.0.1312.56 Safari/537.17
+Referer: http://www.amazon.com/
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en-US,en;q=0.8
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3
+Cookie: ad-id=A7skKmnlv0kIosVQ13dFqJM; ad-privacy=0
+
