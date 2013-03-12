@@ -1,2 +1,79 @@
-cs244-assignment-1
-==================
+INSTRUCTIONS USING AMIs
+The simplest way to reproduce our setup is by launching our AMIs. Launch each of the following AMIs in the specified location with the specified AKI ("Kernel ID" or "Kernel image") and the default security group:
+
+location					AMI			AKI
+us-west-1 (N. California)				aki-f77e26b2
+us-west-2 (Oregon)						aki-fc37bacc
+us-east-1 (N. Virginia)					aki-88aa75e1
+eu-west-1 (Ireland)						aki-71665e05
+
+NOTE: You MUST use the specified AKI and you MUST use the default security group, otherwise the custom kernel won't boot or the right ports won't be open.
+
+Once all the instances are up, SSH into them and verify the kernel version by running "uname -a". The kernel version should be 3.7.9, not 3.2.0. If it's 3.2.0, you probably didn't set the right AKI.
+
+Choose one instance to run a server on. In our experiment, we ran the server on the us-west-1 instance. Edit run.sh on each instance, and put the DNS name of the server instance in the SERVER variable on line 4. Then run server.sh on the server, and run run.sh on each of the clients.
+
+INSTRUCTIONS WITHOUT AMIs
+If you really want to, here's how to set up your own VM without using our AMIs.
+
+Create a new Ubuntu instance, put it in the default security group and select the correct AKI. The AKI depends on the architecture (usually x86_64) and the location; see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/UserProvidedkernels.html#Amazon%20Kernel%20Image%20IDs for a list of AKI IDs.
+
+SSH into the instance and run the following commands:
+
+sudo apt-get update
+sudo apt-get install git gcc make python-apport
+wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.7.9-raring/linux-headers-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.7.9-raring/linux-headers-3.7.9-030709_3.7.9-030709.201302171607_all.deb
+wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.7.9-raring/linux-image-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.7.9-raring/linux-image-extra-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+sudo dpkg -i linux-headers-3.7.9-030709_3.7.9-030709.201302171607_all.deb
+sudo dpkg -i linux-headers-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+sudo dpkg -i linux-image-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+sudo dpkg -i linux-image-extra-3.7.9-030709-generic_3.7.9-030709.201302171607_amd64.deb
+git clone https://github.com/catrope/cs244-win13-pa3-tfo
+cd cs244-win13-pa3-tfo
+make
+
+Now edit /boot/grub/menu.lst and add the following lines:
+
+title			Ubuntu 12.04.1 LTS, kernel 3.7.9-030709-generic
+root			(hd0)
+kernel			/boot/vmlinuz-3.7.9-030709-generic root=LABEL=cloudimg-rootfs ro console=hvc0
+initrd			/boot/initrd.img-3.7.9-030709-generic
+
+title			Ubuntu 12.04.1 LTS, kernel 3.7.9-030709-generic (recovery mode)
+root			(hd0)
+kernel			/boot/vmlinuz-3.7.9-030709-generic root=LABEL=cloudimg-rootfs ro  single
+initrd			/boot/initrd.img-3.7.9-030709-generic
+
+Right before the line:
+title			Ubuntu 12.04.1 LTS, kernel 3.2.0-36-virtual
+
+Now stop and start the instance. After this "uname -a" should say the kernel version is 3.7.9, not 3.2. If the kernel version is still 3.2, you most likely either specified the wrong AKI or did not edit /boot/grub/menu.lst correctly.
+
+CREATING YOUR OWN DATA SETS
+To create your own data sets, you will need to have each request and response in a separate file, and create two manifests, one for the requests and one for the responses.
+
+In each of these manifests, the first line is a single integer specifying the number of entries in the file. The entries follow, each on its own line. Request entries are formatted as follows:
+
+requestFilename group connection waitForHeadOfGroup waitForCompletionOfGroup responseLength
+
+Where:
+* requestFilename is the name of the file with the request data. May not contain spaces
+* group is a number identifying the group this request belongs to
+* connection is a number identifying the connection this request belongs to
+* waitForHeadOfGroup is a group number or -1 no group. If not set to -1, the request will block until all requests in that group have received the first 4000 bytes of their response
+* waitForCompletionOfGroup is a group number or -1 for no group. If not set to -1, the request will block until all requests in that group have been completed
+* responseLength is the length of the associated response in bytes
+Group and connection numbers start at 0. Requests in the same group aren't logically tied to each other, but requests waiting on a group will block until all requests in that group have been completed (or have received the first 4000 bytes, if waitingForHeadOfGroup is used). Requests in the same connection wait for each other: they literally use the same TCP connection, so only one request can be active per connection at any given time, and only one three-way handshake is done per connection.
+
+Response entries are formatted as follows:
+
+responseFilename requestLength requestStart
+
+Where:
+* responseFilename is the name of the file with the response data. May not contain spaces
+* requestLength is the length of the request in bytes
+* requestStart is a prefix of the request data that uniquely identifies the request (usually the entire first line)
+
+To play back a data set, run tfomultiserver and pass the filename of the response manifest with the -r flag. Then run tfomulticlient, passing the filename of the request manifest with the -r flag. The client iterates over the requests, determines which ones are ready (i.e. aren't blocked on other requests) and sends those. As response data comes in, this will cause blocked requests to become ready, and they will be sent once they can be.
