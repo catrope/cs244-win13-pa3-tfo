@@ -16,30 +16,34 @@ ping -c 10 $SERVERIP
 echo Building...
 make
 
-# Load Wikipedia 10 times without TFO
-cd wikipedia
-SUM=0
-for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
+for experiment in wikipedia amazon
 do
-	echo -n "Wikipedia without TFO run $i: "
-	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs)
-	echo $T us
-	SUM=$(($SUM + $T))
-done
-echo Average: $(($SUM / $SAMPLES)) us
-echo
+	# Load 10 times without TFO
+	cd $experiment
+	SUM=0
+	for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
+	do
+		echo -n "$experiment without TFO run $i: "
+		T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs)
+		echo $T us
+		SUM=$(($SUM + $T))
+	done
+	echo Average: $(($SUM / $SAMPLES)) us
+	echo
 
-# Load Wikipedia once with TFO so we have a cookie for sure
-../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f
+	# Load once with TFO so we have a cookie for sure
+	../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f
 
-# Load Wikipedia 10 times with TFO
-SUM=0
-for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
-do
-	echo -n "Wikipedia with TFO run $i: "
-	T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f)
-	echo $T us
-	SUM=$(($SUM + $T))
+	# Load 10 times with TFO
+	SUM=0
+	for (( i=1; $i - 1 - $SAMPLES; i=$(($i + 1)) ))
+	do
+		echo -n "$experiment with TFO run $i: "
+		T=$(../tfomulticlient -s $SERVERIP -p $PORT -r reqs -f)
+		echo $T us
+		SUM=$(($SUM + $T))
+	done
+	echo Average: $(($SUM / $SAMPLES)) us
 done
-echo Average: $(($SUM / $SAMPLES)) us
+
 
