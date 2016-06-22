@@ -1,13 +1,3 @@
-/* conditional define for TCP_FASTOPEN */
-#ifndef TCP_FASTOPEN
-#define TCP_FASTOPEN   23
-#endif
-
-/* conditional define for MSG_FASTOPEN */
-#ifndef MSG_FASTOPEN
-#define MSG_FASTOPEN   0x20000000
-#endif
-
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -19,6 +9,16 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <getopt.h>
+
+/* conditional define for TCP_FASTOPEN */
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN   23
+#endif
+
+/* conditional define for MSG_FASTOPEN */
+#ifndef MSG_FASTOPEN
+#define MSG_FASTOPEN   0x20000000
+#endif
 
 int main(int argc, char *argv[])
 {
