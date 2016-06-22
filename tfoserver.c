@@ -1,13 +1,3 @@
-/* conditional define for TCP_FASTOPEN */
-#ifndef TCP_FASTOPEN
-#define TCP_FASTOPEN   23
-#endif
-
-/* conditional define for MSG_FASTOPEN */
-#ifndef MSG_FASTOPEN
-#define MSG_FASTOPEN   0x20000000
-#endif
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -20,6 +10,16 @@
 #include <time.h>
 #include <netinet/tcp.h>
 #include <getopt.h>
+
+/* conditional define for TCP_FASTOPEN */
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN   23
+#endif
+
+/* conditional define for MSG_FASTOPEN */
+#ifndef MSG_FASTOPEN
+#define MSG_FASTOPEN   0x20000000
+#endif
 
 struct conn {
     int fd;
